@@ -10,9 +10,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <title>Hello World!</title>
     <script src=./node_modules/cesium/Build/CesiumUnminified/Cesium.js></script>
-    <script src="./Build/CesiumGeometry.js"></script>
+    <script src="./Build/CesiumGeometry/CesiumGeometry.js"></script>
     <style>
-         @import url(./node_modules/cesium/Build/CesiumUnminified/Widgets/widgets.css);
+        @import url(./node_modules/cesium/Build/CesiumUnminified/Widgets/widgets.css);
+
         html,
         body,
         #cesiumContainer {
@@ -28,7 +29,122 @@
 <body>
     <div id="cesiumContainer"></div>
     <script>
-        var viewer = new Cesium.Viewer('cesiumContainer');
+        var viewer = new Cesium.Viewer('cesiumContainer', {
+        });
+
+        var scene = viewer.scene;
+        var primitives = scene.primitives;
+
+        for (var i = 0, len = 100; i < len; i++) {
+
+            var startPoint = Cesium.Cartesian3.fromDegrees(Math.random() * 100, Math.random() * 100);
+            var endPoint = Cesium.Cartesian3.fromDegrees(Math.random() * 100, Math.random() * 100);
+
+            var positions = Cesium.getLinkedPointList(startPoint, endPoint, 30000, 50);
+
+            var geometryInstances = new Cesium.GeometryInstance({
+                geometry: new Cesium.PolylineGeometry({
+                    positions: positions,
+                    width: 5.0,
+                    vertexFormat: Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
+                })
+            });
+
+            var appearance = new Cesium.PolylineMaterialAppearance({
+                material: Cesium.Material.fromType('PolylineAttackLink', {
+                    color: new Cesium.Color(1, 1, 0, 0.5)
+                }),
+                renderState: {
+                    blending: Cesium.BlendingState.ADDITIVE_BLEND
+                }
+            });
+            appearance.getRenderState = function () {
+                var translucent = this.isTranslucent();
+                var rs = Cesium.clone(this.renderState, false);
+                if (translucent) {
+                    rs.depthMask = true;
+                    //rs.blending = Cesium.BlendingState.ALPHA_BLEND;
+                    //rs.blending = Cesium.BlendingState.DISABLED;
+                } else {
+                    rs.depthMask = true;
+                }
+                return rs;
+            };
+
+
+            var primitive = viewer.scene.primitives.add(new Cesium.Primitive({
+                asynchronous: false,
+                geometryInstances: geometryInstances,
+                appearance: appearance
+            }));
+
+            scene.tweens.addProperty({
+                object: primitive.appearance.material.uniforms,
+                property: 'time',
+                startValue: 0.0,
+                stopValue: 1.0,
+                duration: 1.0,
+                _repeat: Number.MAX_SAFE_INTEGER
+            });
+        }
+        /*
+    
+    
+         scene.tweens.addProperty({
+         object: primitive.appearance.material.uniforms,
+         property: 'time',
+         startValue: 0.0,
+         stopValue: 1.0,
+         duration: 10.0,
+         _repeat: Number.MAX_SAFE_INTEGER
+         });
+    
+         var primitive = new Cesium.Primitive({
+         geometryInstances: new Cesium.GeometryInstance({
+         geometry: new Cesium.PolylineGeometry({
+         positions: Cesium.Cartesian3.fromDegreesArrayHeights([
+         0.0, 0.0, 100000,
+         50.0, 0.0, 100000
+         ]),
+         followSurface: true,
+         width: 50.0,
+         vertexFormat: Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
+         })
+         }),
+         appearance: new Cesium.PolylineMaterialAppearance({
+         material: new Cesium.Material({
+         fabric: {
+         type: 'PolylineGlow',
+         uniforms: {
+         color: new Cesium.Color(1.0, 1.0, 0.0, 1.0),
+         glowPower: 0.05,
+         }
+         }
+         })
+         })
+         });
+    
+         viewer.scene.primitives.add(primitive);*/
+
+        for (var i = 0, len = 0; i < len; i++) {
+            var startPoint = Cesium.Cartesian3.fromDegrees(Math.random() * 100, Math.random() * 100);
+            var endPoint = Cesium.Cartesian3.fromDegrees(Math.random() * 100, Math.random() * 100);
+
+            var positions = Cesium.getLinkedPointList(startPoint, endPoint, 30000, 50);
+
+            var glowingLine = viewer.entities.add({
+                name: 'Glowing blue line on the surface',
+                polyline: {
+                    positions: positions,
+                    width: 5,
+                    material: new Cesium.PolylineAttackLinkMaterialProperty({
+                        color: new Cesium.Color(1, 1, 0, 0.5)
+                    })
+                }
+            });
+        }
+
+
     </script>
 </body>
 
